@@ -1,0 +1,166 @@
+<%- include('../partials/layout_start', { title }) %>
+
+<div class="row justify-content-center">
+  <div class="col-12 col-xl-10">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h1 class="h5 mb-0"><i class="bi bi-calendar-event me-2"></i><%= title %></h1>
+        <a class="btn btn-sm btn-outline-secondary" href="/admin/events">Back</a>
+      </div>
+      <div class="card-body">
+        <% if (event && ['completed','cancelled','archived'].includes(event.status)) { %>
+          <div class="alert alert-secondary small">This event is <%= event.status %> and can no longer be edited.</div>
+        <% } %>
+        <form id="event-form" data-event-id="<%= event ? event.id : '' %>" class="row g-3" novalidate>
+          <div id="selected-students-data" class="d-none"><%= JSON.stringify(selectedStudents || []) %></div>
+          <div class="col-12">
+            <label class="form-label" for="title">Event title *</label>
+            <input class="form-control" id="title" name="title" required maxlength="200" value="<%= event ? event.title : '' %>">
+          </div>
+          <div class="col-12 col-md-8">
+            <label class="form-label" for="description">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="2" maxlength="5000"><%= event ? (event.description || '') : '' %></textarea>
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="category">Category</label>
+            <input class="form-control" id="category" name="category" maxlength="50" placeholder="Academic, Sports, Cultural…" value="<%= event ? (event.category || '') : '' %>">
+          </div>
+
+          <div class="col-12"><hr class="my-1"><h2 class="h6 fw-bold text-muted">Schedule (school time)</h2></div>
+          <div class="col-12 col-md-3">
+            <label class="form-label" for="startAt">Event start *</label>
+            <input type="datetime-local" class="form-control" id="startAt" name="startAt" required
+                   value="<%= event ? fmt.local(event.start_at, timezone) : '' %>">
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label" for="endAt">Event end *</label>
+            <input type="datetime-local" class="form-control" id="endAt" name="endAt" required
+                   value="<%= event ? fmt.local(event.end_at, timezone) : '' %>">
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label" for="checkinOpensAt">Check-in opens *</label>
+            <input type="datetime-local" class="form-control" id="checkinOpensAt" name="checkinOpensAt" required
+                   value="<%= event ? fmt.local(event.checkin_opens_at, timezone) : '' %>">
+          </div>
+          <div class="col-12 col-md-3">
+            <label class="form-label" for="checkinClosesAt">Check-in closes *</label>
+            <input type="datetime-local" class="form-control" id="checkinClosesAt" name="checkinClosesAt" required
+                   value="<%= event ? fmt.local(event.checkin_closes_at, timezone) : '' %>">
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="lateAfter">Late after (optional)</label>
+            <input type="datetime-local" class="form-control" id="lateAfter" name="lateAfter"
+                   value="<%= event && event.late_after ? fmt.local(event.late_after, timezone) : '' %>">
+            <div class="form-text">Defaults to the event start time.</div>
+          </div>
+          <div class="col-12 col-md-4 d-flex align-items-end">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="checkoutRequired" name="checkoutRequired" <%= event && event.checkout_required ? 'checked' : '' %>>
+              <label class="form-check-label" for="checkoutRequired">Require check-out</label>
+            </div>
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="maxAttendance">Capacity (optional)</label>
+            <input type="number" class="form-control" id="maxAttendance" name="maxAttendance" min="1" value="<%= event && event.max_attendance ? event.max_attendance : '' %>">
+          </div>
+
+          <div class="col-12"><hr class="my-1"><h2 class="h6 fw-bold text-muted">Venue &amp; GPS verification</h2></div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="venueName">Venue name *</label>
+            <input class="form-control" id="venueName" name="venueName" required maxlength="200" value="<%= event ? event.venue_name : '' %>">
+          </div>
+          <div class="col-6 col-md-2">
+            <label class="form-label" for="latitude">Latitude *</label>
+            <input type="number" step="0.0000001" class="form-control" id="latitude" name="latitude" required min="-90" max="90"
+                   value="<%= event ? event.latitude : '' %>">
+          </div>
+          <div class="col-6 col-md-2">
+            <label class="form-label" for="longitude">Longitude *</label>
+            <input type="number" step="0.0000001" class="form-control" id="longitude" name="longitude" required min="-180" max="180"
+                   value="<%= event ? event.longitude : '' %>">
+          </div>
+          <div class="col-6 col-md-2">
+            <label class="form-label" for="radiusMeters">Radius (m) *</label>
+            <input type="number" class="form-control" id="radiusMeters" name="radiusMeters" required min="10" max="10000" value="<%= event ? event.radius_meters : 50 %>">
+          </div>
+          <div class="col-6 col-md-2">
+            <label class="form-label" for="maxGpsAccuracyMeters">Max GPS accuracy (m) *</label>
+            <input type="number" class="form-control" id="maxGpsAccuracyMeters" name="maxGpsAccuracyMeters" required min="5" max="1000" value="<%= event ? event.max_gps_accuracy_meters : 50 %>">
+          </div>
+          <div class="col-12">
+            <button type="button" class="btn btn-sm btn-outline-primary" id="use-my-location"><i class="bi bi-geo me-1"></i>Use my current location</button>
+            <div class="form-text d-inline-block ms-2 small text-muted">Get coordinates from a phone standing at the venue for best results.</div>
+          </div>
+
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="poster">Event poster (JPEG/PNG/WebP, ≤5 MB)</label>
+            <input type="file" class="form-control" id="poster" name="poster" accept="image/jpeg,image/png,image/webp">
+            <% if (event && event.poster_path) { %>
+              <img src="<%= event.poster_path %>" alt="Current poster" class="img-thumbnail mt-2" style="max-height:120px">
+            <% } %>
+          </div>
+
+          <div class="col-12"><hr class="my-1"><h2 class="h6 fw-bold text-muted">Eligibility</h2></div>
+          <div class="col-12">
+            <div class="form-text mb-2">If nothing is selected below, the event is open to <strong>every active student</strong>.</div>
+          </div>
+          <div class="col-12 col-lg-4">
+            <label class="form-label small fw-semibold">Grade levels</label>
+            <div class="border rounded p-2" style="max-height:180px; overflow:auto;">
+              <% for (const g of eligibilityGrades) { %>
+                <div class="form-check">
+                  <input class="form-check-input elig-grade" type="checkbox" value="<%= g.id %>" id="eg-<%= g.id %>"
+                    <%= eligibility && eligibility.grades.some(x => x.id === g.id) ? 'checked' : '' %>>
+                  <label class="form-check-label small" for="eg-<%= g.id %>"><%= g.name %></label>
+                </div>
+              <% } %>
+            </div>
+          </div>
+          <div class="col-12 col-lg-4">
+            <label class="form-label small fw-semibold">Sections</label>
+            <div class="border rounded p-2" style="max-height:180px; overflow:auto;">
+              <% for (const s of sections) { %>
+                <div class="form-check">
+                  <input class="form-check-input elig-section" type="checkbox" value="<%= s.id %>" id="es-<%= s.id %>"
+                    <%= eligibility && eligibility.sections.some(x => x.id === s.id) ? 'checked' : '' %>>
+                  <label class="form-check-label small" for="es-<%= s.id %>"><%= s.grade_level_name %> - <%= s.name %></label>
+                </div>
+              <% } %>
+            </div>
+          </div>
+          <div class="col-12 col-lg-4">
+            <label class="form-label small fw-semibold">Individual students</label>
+            <input class="form-control form-control-sm mb-2" id="student-search" placeholder="Type name or student number…">
+            <div id="student-results" class="border rounded p-1 mb-2" style="min-height:38px; max-height:120px; overflow:auto;"></div>
+            <div id="student-chips" class="d-flex flex-wrap gap-1"></div>
+          </div>
+
+          <div class="col-12"><hr class="my-1"><h2 class="h6 fw-bold text-muted">Assigned teachers / coordinators</h2></div>
+          <div class="col-12">
+            <div class="row">
+              <% for (const t of teachers) { %>
+                <div class="col-12 col-md-4">
+                  <div class="form-check">
+                    <input class="form-check-input teacher-check" type="checkbox" value="<%= t.id %>" id="t-<%= t.id %>"
+                      <%= assignments && assignments.some(a => a.teacher_id === t.id) ? 'checked' : '' %>>
+                    <label class="form-check-label small" for="t-<%= t.id %>"><%= t.last_name %>, <%= t.first_name %> <span class="text-muted">(<%= t.employee_number %>)</span></label>
+                  </div>
+                </div>
+              <% } %>
+              <% if (!teachers.length) { %><p class="text-muted small mb-0">No active teachers yet.</p><% } %>
+            </div>
+          </div>
+
+          <div class="col-12 d-flex gap-2 pt-2">
+            <button type="submit" class="btn btn-primary" <%= event && ['completed','cancelled','archived'].includes(event.status) ? 'disabled' : '' %>>
+              <i class="bi bi-check-lg me-1"></i><%= event ? 'Save changes' : 'Create event (draft)' %>
+            </button>
+            <a class="btn btn-outline-secondary" href="/admin/events">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/layout_end', { pageScripts: ['/js/event-form.js'] }) %>

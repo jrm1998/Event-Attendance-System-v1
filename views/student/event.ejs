@@ -1,0 +1,48 @@
+<%- include('../partials/layout_start', { title: event.title }) %>
+
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+          <h1 class="h4 mb-0"><%= event.title %></h1>
+          <% if (event.attendance_status) { %>
+            <span class="badge badge-status-<%= event.attendance_status %>"><%= event.attendance_status.replace('_',' ') %></span>
+          <% } %>
+        </div>
+        <% if (event.description) { %><p class="text-muted"><%= event.description %></p><% } %>
+        <dl class="row mb-0 small">
+          <dt class="col-5 col-sm-3">Venue</dt><dd class="col-7 col-sm-9"><%= event.venue_name %> (within <%= event.radius_meters %> m)</dd>
+          <dt class="col-5 col-sm-3">When</dt><dd class="col-7 col-sm-9"><%= fmt.dt(event.start_at, timezone) %> — <%= fmt.t(event.end_at, timezone) %></dd>
+          <dt class="col-5 col-sm-3">Check-in</dt><dd class="col-7 col-sm-9"><%= fmt.dt(event.checkin_opens_at, timezone) %> — <%= fmt.t(event.checkin_closes_at, timezone) %></dd>
+          <% if (event.checkout_required) { %>
+            <dt class="col-5 col-sm-3">Check-out</dt><dd class="col-7 col-sm-9">Required before <%= fmt.t(event.end_at, timezone) %></dd>
+          <% } %>
+        </dl>
+      </div>
+      <div class="card-footer bg-white d-flex gap-2">
+        <a class="btn btn-outline-secondary btn-sm" href="/student">Back</a>
+        <% const nowMs = now.getTime();
+           const inWindow = nowMs >= new Date(event.checkin_opens_at).getTime() && nowMs <= new Date(event.checkin_closes_at).getTime();
+           const checkoutOpen = event.checkout_required && nowMs <= new Date(event.end_at).getTime();
+           const checkedInNotOut = event.attendance_id && !event.attendance_checkout_at && event.attendance_status !== 'checked_out'; %>
+        <% if (!event.attendance_id && event.status === 'published' && inWindow) { %>
+          <a class="btn btn-primary btn-sm" href="/student/events/<%= event.id %>/scan"><i class="bi bi-qr-code-scan me-1"></i>Scan QR to check in</a>
+        <% } else if (checkedInNotOut && event.status === 'published' && checkoutOpen) { %>
+          <a class="btn btn-warning btn-sm" href="/student/events/<%= event.id %>/scan"><i class="bi bi-qr-code-scan me-1"></i>Scan QR to check out</a>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="card shadow-sm">
+      <div class="card-body small text-muted">
+        <i class="bi bi-info-circle me-1"></i>
+        Attendance requires the QR code shown at the venue and your phone's location. Your GPS reading is
+        verified on the school server — distance is never computed on your device. Location is only used
+        during attendance submission.
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/layout_end') %>

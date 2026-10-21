@@ -1,0 +1,108 @@
+<%- include('../partials/layout_start', { title: 'Students' }) %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h4 mb-0"><i class="bi bi-people me-2"></i>Students <span class="text-muted small">(<%= total %>)</span></h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary btn-sm" href="/admin/students/import"><i class="bi bi-upload me-1"></i>Import</a>
+    <a class="btn btn-primary btn-sm" href="/admin/students/new"><i class="bi bi-person-plus me-1"></i>Add Student</a>
+  </div>
+</div>
+
+<form class="card shadow-sm mb-3" method="get" action="/admin/students">
+  <div class="card-body row g-2 align-items-end">
+    <div class="col-12 col-md-4">
+      <label class="form-label small mb-1" for="search">Search</label>
+      <input type="search" class="form-control" id="search" name="search" placeholder="Name or student number" value="<%= filters.search %>">
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label small mb-1" for="gradeLevelId">Grade</label>
+      <select class="form-select" id="gradeLevelId" name="gradeLevelId">
+        <option value="">All</option>
+        <% for (const g of grades) { %>
+          <option value="<%= g.id %>" <%= filters.gradeLevelId === g.id ? 'selected' : '' %>><%= g.name %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label small mb-1" for="sectionId">Section</label>
+      <select class="form-select" id="sectionId" name="sectionId">
+        <option value="">All</option>
+        <% for (const s of sections) { %>
+          <option value="<%= s.id %>" <%= filters.sectionId === s.id ? 'selected' : '' %>><%= s.grade_level_name %> - <%= s.name %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="col-6 col-md-2">
+      <label class="form-label small mb-1" for="status">Status</label>
+      <select class="form-select" id="status" name="status">
+        <option value="">All</option>
+        <% for (const st of ['active', 'inactive', 'archived']) { %>
+          <option value="<%= st %>" <%= filters.status === st ? 'selected' : '' %>><%= st %></option>
+        <% } %>
+      </select>
+    </div>
+    <div class="col-6 col-md-2 d-flex gap-2">
+      <button class="btn btn-primary flex-fill" type="submit">Filter</button>
+      <a class="btn btn-outline-secondary" href="/admin/students" title="Clear filters"><i class="bi bi-x-lg"></i></a>
+    </div>
+  </div>
+</form>
+
+<form id="bulk-form">
+  <div class="card shadow-sm">
+    <div class="card-header bg-white d-flex flex-wrap gap-2 align-items-center">
+      <div class="dropdown">
+        <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" id="bulkMenu" aria-expanded="false">
+          <i class="bi bi-list-check me-1"></i>Bulk actions
+        </button>
+        <ul class="dropdown-menu" aria-labelledby="bulkMenu">
+          <li><button class="dropdown-item" type="button" data-bulk="activate">Activate</button></li>
+          <li><button class="dropdown-item" type="button" data-bulk="deactivate">Deactivate</button></li>
+          <li><button class="dropdown-item text-danger" type="button" data-bulk="archive">Archive</button></li>
+        </ul>
+      </div>
+      <span class="text-muted small" id="bulk-status"></span>
+    </div>
+    <div class="table-responsive table-scroll">
+      <table class="table table-hover align-middle mb-0 table-sticky">
+        <thead>
+          <tr>
+            <th style="width:36px"><input type="checkbox" class="form-check-input" id="check-all" aria-label="Select all"></th>
+            <th>Student no.</th><th>Name</th><th>Grade</th><th>Section</th><th>Status</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (!students.length) { %>
+            <tr><td colspan="7" class="text-center text-muted py-4">No students match these filters.</td></tr>
+          <% } %>
+          <% for (const s of students) { %>
+            <tr>
+              <td><input type="checkbox" class="form-check-input row-check" name="ids" value="<%= s.id %>"></td>
+              <td><%= s.student_number %></td>
+              <td><%= s.last_name %>, <%= s.first_name %><span class="text-muted small"><%= s.middle_name ? ' ' + s.middle_name + '.' : '' %></span></td>
+              <td><%= s.grade_level_name || '—' %></td>
+              <td><%= s.section_name || '—' %></td>
+              <td><span class="badge text-bg-<%= s.status === 'active' ? 'success' : s.status === 'inactive' ? 'secondary' : 'warning' %>"><%= s.status %></span></td>
+              <td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="/admin/students/<%= s.id %>/edit"><i class="bi bi-pencil"></i></a></td>
+            </tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+    <div class="card-footer bg-white d-flex justify-content-between align-items-center">
+      <span class="small text-muted">Page <%= page %> of <%= totalPages %></span>
+      <nav aria-label="Student pages">
+        <ul class="pagination pagination-sm mb-0">
+          <li class="page-item <%= page <= 1 ? 'disabled' : '' %>">
+            <a class="page-link" href="/admin/students?page=<%= page - 1 %>&search=<%= encodeURIComponent(filters.search) %>&gradeLevelId=<%= filters.gradeLevelId || '' %>&sectionId=<%= filters.sectionId || '' %>&status=<%= filters.status || '' %>">Prev</a>
+          </li>
+          <li class="page-item <%= page >= totalPages ? 'disabled' : '' %>">
+            <a class="page-link" href="/admin/students?page=<%= page + 1 %>&search=<%= encodeURIComponent(filters.search) %>&gradeLevelId=<%= filters.gradeLevelId || '' %>&sectionId=<%= filters.sectionId || '' %>&status=<%= filters.status || '' %>">Next</a>
+          </li>
+        </ul>
+      </nav>
+    </div>
+  </div>
+</form>
+
+<%- include('../partials/layout_end', { pageScripts: ['/js/students-page.js'] }) %>

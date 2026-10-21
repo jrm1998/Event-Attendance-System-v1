@@ -1,0 +1,190 @@
+<%- include('../partials/layout_start', { title: 'Attendance · ' + event.title }) %>
+
+<div class="d-none" id="manage-config"
+     data-event-id="<%= event.id %>"
+     data-event-title="<%= event.title %>"></div>
+<div class="d-none" data-subscribe-event="<%= event.id %>"></div>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <div>
+    <h1 class="h5 mb-0"><%= event.title %></h1>
+    <span class="text-muted small">
+      <%= fmt.dt(event.start_at, timezone) %> &middot; <%= event.venue_name %> &middot; radius <%= event.radius_meters %> m
+      &middot; <span class="badge bg-secondary"><%= event.status %></span>
+    </span>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-sm btn-outline-secondary" href="<%= backPath %>">Back</a>
+    <a class="btn btn-sm btn-outline-primary"
+       href="<%= isAdmin ? '/admin/events/' + event.id + '/qr' : '/teacher/events/' + event.id + '/qr' %>">
+      <i class="bi bi-qr-code me-1"></i>QR screen
+    </a>
+    <div class="btn-group">
+      <button type="button" class="btn btn-sm btn-outline-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
+        <i class="bi bi-download me-1"></i>Export
+      </button>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="/api/events/<%= event.id %>/reports/attendance.csv">CSV</a></li>
+        <li><a class="dropdown-item" href="/api/events/<%= event.id %>/reports/attendance.xlsx">Excel (.xlsx)</a></li>
+        <li><a class="dropdown-item" href="/api/events/<%= event.id %>/reports/attendance.pdf">PDF report</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item" href="/api/events/<%= event.id %>/reports/signin-sheet.pdf">Printable sign-in sheet</a></li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<div class="row g-3 mb-4" id="stat-cards">
+  <% ['present','late','checked_out','pending_review','absent','rejected'].forEach(function (st) { %>
+    <div class="col-6 col-md-4 col-xl-2">
+      <div class="card shadow-sm h-100">
+        <div class="card-body py-2 text-center">
+          <div class="fs-4 fw-bold" data-stat="<%= st %>"><%= stats[st] || 0 %></div>
+          <div class="small text-muted"><%= st.replace('_',' ') %></div>
+        </div>
+      </div>
+    </div>
+  <% }) %>
+</div>
+
+<div id="refresh-hint" class="alert alert-info py-2 d-none">
+  <i class="bi bi-arrow-repeat me-1"></i>New attendance activity.
+  <button class="btn btn-sm btn-outline-primary ms-2" id="refresh-table-btn">Refresh</button>
+</div>
+
+<% if (flagged.length) { %>
+  <div class="card shadow-sm mb-4 border-warning">
+    <div class="card-header bg-warning-subtle">
+      <i class="bi bi-hourglass-split me-1"></i>Pending review (<%= flagged.length %>)
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm mb-0 align-middle">
+          <thead class="table-light">
+            <tr><th>Student</th><th>Checked in</th><th>Distance</th><th>Accuracy</th><th>Flag</th><th class="text-end">Decision</th></tr>
+          </thead>
+          <tbody>
+            <% flagged.forEach(function (r) { %>
+              <tr>
+                <td><%= r.first_name %> <%= r.last_name %> <span class="text-muted small">(<%= r.student_number %>)</span></td>
+                <td class="small"><%= r.checkin_at ? fmt.dt(r.checkin_at, timezone) : '—' %></td>
+                <td class="small"><%= r.checkin_distance_meters != null ? r.checkin_distance_meters + ' m' : '—' %></td>
+                <td class="small"><%= r.checkin_accuracy_meters != null ? '±' + r.checkin_accuracy_meters + ' m' : '—' %></td>
+                <td class="small text-muted"><%= r.verification_reason || 'flagged' %></td>
+                <td class="text-end">
+                  <button class="btn btn-sm btn-success review-btn"
+                          data-id="<%= r.id %>" data-name="<%= r.first_name %> <%= r.last_name %>" data-decision="approve">
+                    Approve
+                  </button>
+                  <button class="btn btn-sm btn-outline-danger review-btn"
+                          data-id="<%= r.id %>" data-name="<%= r.first_name %> <%= r.last_name %>" data-decision="reject">
+                    Reject
+                  </button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+<% } %>
+
+<div class="card shadow-sm mb-4">
+  <div class="card-header"><i class="bi bi-person-plus me-1"></i>Manual entry</div>
+  <div class="card-body">
+    <form id="manual-form" class="row g-2">
+      <div class="col-12 col-md-5 position-relative">
+        <input type="text" class="form-control" id="student-search" placeholder="Search student by number or name…" autocomplete="off">
+        <div class="list-group position-absolute w-100 shadow" id="search-results" style="z-index: 1050;"></div>
+      </div>
+      <div class="col-6 col-md-2">
+        <select class="form-select" id="manual-status">
+          <option value="present">Present</option>
+          <option value="late">Late</option>
+          <option value="absent">Absent</option>
+        </select>
+      </div>
+      <div class="col-12 col-md-3">
+        <input type="text" class="form-control" id="manual-reason" placeholder="Reason (required)…" maxlength="500">
+      </div>
+      <div class="col-6 col-md-2">
+        <button class="btn btn-primary w-100" type="submit">Record</button>
+      </div>
+      <div class="col-12">
+        <div class="form-text">Selected: <span id="selected-student" class="fw-semibold">none</span></div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card shadow-sm">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <span><i class="bi bi-people me-1"></i>Records (<%= rows.length %>)</span>
+  </div>
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-sm table-hover mb-0 align-middle">
+        <thead class="table-light">
+          <tr>
+            <th>Student</th><th>Section</th><th>Status</th>
+            <th>Checked in</th><th>Checked out</th><th>Distance</th><th>Verified</th><th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="records-tbody">
+          <% rows.forEach(function (r) { %>
+            <tr>
+              <td><%= r.first_name %> <%= r.last_name %> <span class="text-muted small">(<%= r.student_number %>)</span></td>
+              <td class="small"><%= [r.grade_level_name, r.section_name].filter(Boolean).join(' · ') || '—' %></td>
+              <td><span class="badge badge-status-<%= r.status %>"><%= r.status.replace('_',' ') %></span></td>
+              <td class="small"><%= r.checkin_at ? fmt.dt(r.checkin_at, timezone) : '—' %></td>
+              <td class="small"><%= r.checkout_at ? fmt.dt(r.checkout_at, timezone) : '—' %></td>
+              <td class="small"><%= r.checkin_distance_meters != null ? r.checkin_distance_meters + ' m' : '—' %></td>
+              <td class="small text-muted"><%= r.verification_status %><% if (r.verification_reason) { %> <i class="bi bi-info-circle" title="<%= r.verification_reason %>"></i><% } %></td>
+              <td class="text-end text-nowrap">
+                <button class="btn btn-sm btn-outline-secondary audit-btn" data-id="<%= r.id %>" title="Audit trail">
+                  <i class="bi bi-clock-history"></i>
+                </button>
+                <% if (r.checkin_at && !r.checkout_at) { %>
+                  <button class="btn btn-sm btn-outline-warning checkout-btn" data-id="<%= r.id %>"
+                          data-name="<%= r.first_name %> <%= r.last_name %>" title="Record check-out">
+                    <i class="bi bi-box-arrow-right"></i>
+                  </button>
+                <% } %>
+                <% if (r.status !== 'checked_out') { %>
+                  <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary dropdown-toggle" data-bs-toggle="dropdown" title="Correct status">Correct</button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                      <% ['present','late','absent'].forEach(function (st) { if (st !== r.status) { %>
+                        <li><button class="dropdown-item correct-btn" data-id="<%= r.id %>"
+                            data-name="<%= r.first_name %> <%= r.last_name %>" data-status="<%= st %>">Mark <%= st %></button></li>
+                      <% } }) %>
+                    </ul>
+                  </div>
+                <% } %>
+              </td>
+            </tr>
+          <% }) %>
+          <% if (!rows.length) { %>
+            <tr><td colspan="8" class="text-center text-muted py-4">No attendance records yet.</td></tr>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Audit trail modal -->
+<div class="modal fade" id="audit-modal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="h6 modal-title">Audit trail</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="audit-body"><div class="text-muted small">Loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/layout_end', { pageScripts: ['/vendor/socket.io/socket.io.min.js', '/js/socket-client.js', '/js/attendance-manage.js'] }) %>

@@ -1,0 +1,67 @@
+<%- include('../partials/layout_start', { title: 'QR Screen' }) %>
+<div class="d-none" data-subscribe-event="<%= event.id %>" data-qr-rotation="<%= settings.qrRotationSeconds %>"></div>
+
+<div class="text-center mb-3">
+  <div class="d-flex justify-content-center align-items-center gap-2 flex-wrap">
+    <span class="badge text-bg-<%= event.status === 'published' ? 'danger' : 'secondary' %> fs-6">
+      <span class="connection-dot <%= event.status === 'published' ? '' : 'offline' %> me-1"></span>
+      <%= event.status === 'published' ? 'LIVE' : event.status.toUpperCase() %>
+    </span>
+    <span class="badge text-bg-light fs-6"><%= event.category || 'Event' %></span>
+  </div>
+  <h1 class="h3 mt-2 mb-1"><%= event.title %></h1>
+  <p class="text-muted mb-0"><i class="bi bi-geo-alt me-1"></i><%= event.venue_name %> &middot; permitted radius <%= event.radius_meters %> m</p>
+  <p class="small text-muted mb-0"><%= fmt.dt(event.start_at, timezone) %> — <%= fmt.t(event.end_at, timezone) %></p>
+</div>
+
+<div class="card qr-display-card shadow-lg mb-3">
+  <div class="card-body text-center p-4">
+    <% if (event.status !== 'published') { %>
+      <div class="alert alert-warning mb-0">Publish this event to display a live QR code.</div>
+    <% } else { %>
+      <div class="d-flex justify-content-center align-items-center gap-3 mb-3">
+        <i class="bi bi-qr-code fs-3 text-muted"></i>
+        <div class="text-start">
+          <div class="fw-bold">Scan with the school app</div>
+          <div class="small text-muted">Code refreshes every <%= settings.qrRotationSeconds %> seconds automatically</div>
+        </div>
+      </div>
+      <div class="position-relative d-inline-block w-100">
+        <img id="qr-image" alt="Attendance QR code — rotates automatically" class="img-fluid mx-auto d-block"
+             style="max-width: 460px; min-height: 300px; background: #f2f5f9; border-radius: .5rem;">
+        <div id="qr-loading" class="position-absolute top-50 start-50 translate-middle">
+          <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading…</span></div>
+        </div>
+      </div>
+      <div class="progress mt-3" style="height: 6px;">
+        <div id="qr-countdown-bar" class="progress-bar bg-primary" role="progressbar" style="width: 100%"></div>
+      </div>
+      <div class="small text-muted mt-1">Next refresh in <span id="qr-countdown" class="fw-bold"><%= settings.qrRotationSeconds %></span>s</div>
+    <% } %>
+  </div>
+</div>
+
+<div class="row justify-content-center g-3 mb-3">
+  <div class="col-6 col-md-3">
+    <div class="card stat-card text-center"><div class="card-body py-3">
+      <div class="stat-value" id="qr-stat-present">0</div><div class="small text-muted">Checked in</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card text-center"><div class="card-body py-3">
+      <div class="stat-value" id="qr-stat-late">0</div><div class="small text-muted">Late</div>
+    </div></div>
+  </div>
+  <div class="col-6 col-md-3">
+    <div class="card stat-card text-center"><div class="card-body py-3">
+      <div class="stat-value text-muted" id="qr-stat-eligible"><%= eligibleCount %></div><div class="small text-muted">Expected</div>
+    </div></div>
+  </div>
+</div>
+
+<div class="text-center d-print-none">
+  <button class="btn btn-outline-primary btn-sm" id="fullscreen-btn"><i class="bi bi-arrows-fullscreen me-1"></i>Full screen</button>
+  <a class="btn btn-outline-secondary btn-sm" href="<%= currentUser && currentUser.role === 'admin' ? '/admin/events' : '/teacher/events' %>"><i class="bi bi-x-lg me-1"></i>Close</a>
+</div>
+
+<%- include('../partials/layout_end', { pageScripts: ['/vendor/socket.io/socket.io.min.js', '/js/socket-client.js', '/js/qr-display.js'] }) %>

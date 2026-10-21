@@ -1,0 +1,96 @@
+<%- include('../partials/layout_start', { title }) %>
+
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-8">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white d-flex justify-content-between align-items-center">
+        <h1 class="h5 mb-0"><i class="bi bi-person-<%= student ? 'pencil' : 'plus' %> me-2"></i><%= title %></h1>
+        <a class="btn btn-sm btn-outline-secondary" href="/admin/students">Back</a>
+      </div>
+      <div class="card-body">
+        <% if (student) { %>
+          <p class="text-muted small">Student number <strong><%= student.student_number %></strong> is permanent and cannot be changed.</p>
+        <% } %>
+        <form id="student-form" data-student-id="<%= student ? student.id : '' %>" class="row g-3" novalidate>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="studentNumber">Student number *</label>
+            <input class="form-control" id="studentNumber" name="studentNumber" required
+                   value="<%= student ? student.student_number : '' %>" <%= student ? 'disabled' : '' %>
+                   pattern="[A-Za-z0-9-]{3,30}">
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="email">Email</label>
+            <input type="email" class="form-control" id="email" name="email" value="<%= student ? (student.email || '') : '' %>">
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="firstName">First name *</label>
+            <input class="form-control" id="firstName" name="firstName" required maxlength="80" value="<%= student ? student.first_name : '' %>">
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="middleName">Middle name</label>
+            <input class="form-control" id="middleName" name="middleName" maxlength="80" value="<%= student ? (student.middle_name || '') : '' %>">
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="lastName">Last name *</label>
+            <input class="form-control" id="lastName" name="lastName" required maxlength="80" value="<%= student ? student.last_name : '' %>">
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="gradeLevelId">Grade level</label>
+            <select class="form-select" id="gradeLevelId" name="gradeLevelId">
+              <option value="">—</option>
+              <% for (const g of grades) { %>
+                <option value="<%= g.id %>" <%= student && student.grade_level_id === g.id ? 'selected' : '' %>><%= g.name %></option>
+              <% } %>
+            </select>
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="sectionId">Section</label>
+            <select class="form-select" id="sectionId" name="sectionId">
+              <option value="">—</option>
+              <% for (const s of sections) { %>
+                <option value="<%= s.id %>" data-grade="<%= s.grade_level_id %>" <%= student && student.section_id === s.id ? 'selected' : '' %>><%= s.grade_level_name %> - <%= s.name %></option>
+              <% } %>
+            </select>
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="schoolYearId">School year</label>
+            <select class="form-select" id="schoolYearId" name="schoolYearId">
+              <option value="">—</option>
+              <% for (const y of years) { %>
+                <option value="<%= y.id %>" <%= student && student.school_year_id === y.id ? 'selected' : '' %>><%= y.name %> (<%= y.status %>)</option>
+              <% } %>
+            </select>
+          </div>
+          <% if (!student) { %>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="username">Username (optional)</label>
+              <input class="form-control" id="username" name="username" pattern="[A-Za-z0-9._-]{3,50}">
+              <div class="form-text">Defaults to the student number.</div>
+            </div>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="password">Password (optional)</label>
+              <input type="password" class="form-control" id="password" name="password" autocomplete="new-password">
+              <div class="form-text">Defaults to <code>Student@123</code> — students should change it after first login.</div>
+            </div>
+          <% } else { %>
+            <div class="col-12 col-md-6">
+              <label class="form-label" for="status">Status</label>
+              <select class="form-select" id="status" name="status">
+                <% for (const st of ['active', 'inactive', 'archived']) { %>
+                  <option value="<%= st %>" <%= student.status === st ? 'selected' : '' %>><%= st %></option>
+                <% } %>
+              </select>
+              <div class="form-text">Inactive or archived students cannot sign in.</div>
+            </div>
+          <% } %>
+          <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-primary" id="submit-btn"><i class="bi bi-check-lg me-1"></i><%= student ? 'Save changes' : 'Create student' %></button>
+            <a class="btn btn-outline-secondary" href="/admin/students">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/layout_end', { pageScripts: ['/js/student-form.js'] }) %>

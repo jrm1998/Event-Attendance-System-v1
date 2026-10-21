@@ -1,0 +1,63 @@
+<%- include('../partials/layout_start', { title: 'Events' }) %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h4 mb-0"><i class="bi bi-calendar-event me-2"></i>Events <span class="text-muted small">(<%= total %>)</span></h1>
+  <a class="btn btn-primary btn-sm" href="/admin/events/new"><i class="bi bi-plus-lg me-1"></i>New Event</a>
+</div>
+
+<form class="row g-2 mb-3" method="get" action="/admin/events">
+  <div class="col-12 col-md-6">
+    <input type="search" class="form-control" name="search" placeholder="Search title, venue, category" value="<%= filters.search %>">
+  </div>
+  <div class="col-8 col-md-4">
+    <select class="form-select" name="status">
+      <option value="">All statuses</option>
+      <% for (const st of ['draft', 'published', 'completed', 'cancelled', 'archived']) { %>
+        <option value="<%= st %>" <%= filters.status === st ? 'selected' : '' %>><%= st %></option>
+      <% } %>
+    </select>
+  </div>
+  <div class="col-4 col-md-2"><button class="btn btn-primary w-100">Filter</button></div>
+</form>
+
+<div class="row g-3">
+  <% if (!events.length) { %>
+    <div class="col-12"><div class="card shadow-sm"><div class="card-body text-center text-muted py-5">No events yet. Create your first event.</div></div></div>
+  <% } %>
+  <% for (const e of events) { %>
+    <div class="col-12 col-md-6 col-xl-4">
+      <div class="card shadow-sm h-100 event-card" data-event-id="<%= e.id %>" data-status="<%= e.status %>">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="badge text-bg-<%= e.status === 'published' ? 'success' : e.status === 'draft' ? 'secondary' : e.status === 'completed' ? 'primary' : 'warning' %>"><%= e.status %></span>
+            <span class="badge text-bg-light"><%= e.category || 'Event' %></span>
+          </div>
+          <h2 class="h6 fw-bold mb-1"><%= e.title %></h2>
+          <p class="small text-muted mb-2"><i class="bi bi-geo-alt me-1"></i><%= e.venue_name %> &middot; r=<%= e.radius_meters %>m</p>
+          <p class="small mb-0"><i class="bi bi-clock me-1"></i><%= fmt.dt(e.start_at, timezone) %></p>
+          <p class="small text-muted mb-0">Check-in: <%= fmt.t(e.checkin_opens_at, timezone) %> – <%= fmt.t(e.checkin_closes_at, timezone) %>
+            <%= e.checkout_required ? ' · check-out required' : '' %></p>
+        </div>
+        <div class="card-footer bg-white d-flex flex-wrap gap-1">
+          <a class="btn btn-sm btn-outline-secondary" href="/admin/events/<%= e.id %>/edit"><i class="bi bi-pencil me-1"></i>Edit</a>
+          <a class="btn btn-sm btn-outline-secondary" href="/admin/events/<%= e.id %>/attendance"><i class="bi bi-people me-1"></i>Attendance</a>
+          <% if (e.status === 'draft') { %>
+            <button class="btn btn-sm btn-success" data-action="publish"><i class="bi bi-send me-1"></i>Publish</button>
+          <% } %>
+          <% if (e.status === 'published') { %>
+            <a class="btn btn-sm btn-primary" href="/admin/events/<%= e.id %>/qr"><i class="bi bi-qr-code me-1"></i>QR Screen</a>
+            <button class="btn btn-sm btn-outline-warning" data-action="cancel">Cancel</button>
+          <% } %>
+          <% if (e.status === 'published') { %>
+            <button class="btn btn-sm btn-outline-primary" data-action="complete">Mark completed</button>
+          <% } %>
+          <% if (e.status !== 'archived') { %>
+            <button class="btn btn-sm btn-outline-danger" data-action="archive"><i class="bi bi-archive me-1"></i>Archive</button>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/layout_end', { pageScripts: ['/js/events-page.js'] }) %>

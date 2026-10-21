@@ -1,0 +1,77 @@
+<%- include('../partials/layout_start', { title: 'Scan · ' + event.title }) %>
+
+<div class="d-none"
+     id="scan-config"
+     data-event-id="<%= event.id %>"
+     data-mode="<%= checkoutOpen && attendance ? 'checkout' : 'checkin' %>"></div>
+
+<div class="row justify-content-center">
+  <div class="col-12 col-lg-7 col-xl-6">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h1 class="h5 mb-0"><i class="bi bi-qr-code-scan me-2"></i><%= event.title %></h1>
+      <a class="btn btn-sm btn-outline-secondary" href="/student/events/<%= event.id %>">Back</a>
+    </div>
+
+    <div id="offline-warning" class="alert alert-warning d-none">
+      <i class="bi bi-wifi-off me-1"></i>You are offline. Attendance needs a live server connection —
+      submissions are <strong>never</strong> stored on your phone.
+    </div>
+
+    <% if (!windowOpen && !checkoutOpen) { %>
+      <div class="alert alert-secondary">
+        <% if (attendance && attendance.status === 'checked_out') { %>
+          You are fully checked in and out for this event. Nothing more to do.
+        <% } else { %>
+          The attendance window is closed for this event.
+          <% if (attendance) { %>Your recorded status: <span class="badge badge-status-<%= attendance.status %>"><%= attendance.status.replace('_',' ') %></span><% } %>
+        <% } %>
+      </div>
+    <% } else { %>
+      <div class="card shadow-sm mb-3">
+        <div class="card-body">
+          <div id="scan-intro">
+            <p class="mb-2"><strong><%= checkoutOpen && attendance ? 'Check-out' : 'Check-in' %> steps:</strong></p>
+            <ol class="small text-muted mb-3">
+              <li>Point your camera at the QR code shown on the event screen.</li>
+              <li>Allow location access when asked — your position is verified by the server.</li>
+              <li>Stay inside the venue radius until you see the confirmation.</li>
+            </ol>
+            <button class="btn btn-primary btn-lg w-100" id="start-scan-btn">
+              <i class="bi bi-camera-video me-1"></i>Start scanning
+            </button>
+            <div class="form-text text-center mt-2">
+              Camera and location are used only for this submission and require permission.
+            </div>
+          </div>
+
+          <div id="qr-reader" class="d-none mb-3" style="max-width: 420px; margin: 0 auto;"></div>
+
+          <div id="gps-progress" class="d-none text-center my-3">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="small text-muted mt-2 mb-0" id="gps-progress-text">Getting your location…</p>
+          </div>
+
+          <div id="result-panel" class="d-none"></div>
+
+          <div class="text-center mt-3">
+            <button class="btn btn-outline-secondary btn-sm d-none" id="retry-btn"><i class="bi bi-arrow-clockwise me-1"></i>Try again</button>
+          </div>
+        </div>
+      </div>
+
+      <% if (attendance) { %>
+        <div class="card shadow-sm">
+          <div class="card-body small">
+            <strong>Current record:</strong>
+            <span class="badge badge-status-<%= attendance.status %> ms-1"><%= attendance.status.replace('_',' ') %></span>
+            <% if (attendance.checkin_at) { %><div>Checked in: <%= fmt.dt(attendance.checkin_at, timezone) %></div><% } %>
+            <% if (attendance.checkout_at) { %><div>Checked out: <%= fmt.dt(attendance.checkout_at, timezone) %></div><% } %>
+          </div>
+        </div>
+      <% } %>
+    <% } %>
+  </div>
+</div>
+
+<script src="/vendor/html5-qrcode/html5-qrcode.min.js" defer></script>
+<%- include('../partials/layout_end', { pageScripts: ['/js/student-scan.js'] }) %>

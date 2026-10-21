@@ -1,0 +1,92 @@
+<%- include('../partials/layout_start', { title: 'Dashboard' }) %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h4 mb-0"><i class="bi bi-speedometer2 me-2"></i>Dashboard</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-primary btn-sm" href="/admin/events/new"><i class="bi bi-plus-lg me-1"></i>New Event</a>
+    <button type="button" class="btn btn-outline-primary btn-sm pwa-install-btn d-none"><i class="bi bi-download me-1"></i>Install App</button>
+  </div>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card h-100"><div class="card-body d-flex align-items-center gap-3">
+      <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-people"></i></div>
+      <div><div class="stat-value" id="stat-students"><%= summary.students.active %></div><div class="text-muted small">Active students</div></div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card h-100"><div class="card-body d-flex align-items-center gap-3">
+      <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-calendar-event"></i></div>
+      <div><div class="stat-value" id="stat-events"><%= summary.events.total %></div><div class="text-muted small">Total events</div></div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card h-100"><div class="card-body d-flex align-items-center gap-3">
+      <div class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-clock-history"></i></div>
+      <div><div class="stat-value" id="stat-upcoming"><%= summary.events.upcoming %></div><div class="text-muted small">Upcoming / ongoing</div></div>
+    </div></div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="card stat-card h-100"><div class="card-body d-flex align-items-center gap-3">
+      <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-exclamation-diamond"></i></div>
+      <div><div class="stat-value" id="stat-pending"><%= summary.attendance.pendingReview %></div><div class="text-muted small">Pending review</div></div>
+    </div></div>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-7">
+    <div class="card shadow-sm"><div class="card-header bg-white d-flex justify-content-between align-items-center">
+      <span><i class="bi bi-activity me-2"></i>Attendance totals (all events)</span>
+      <span class="small text-muted" id="summary-updated">live · refreshes every 30s</span>
+    </div>
+    <div class="card-body">
+      <div class="row text-center g-3 mb-3">
+        <div class="col"><div class="h4 mb-0 text-success" id="att-present"><%= summary.attendance.present %></div><small class="text-muted">Present</small></div>
+        <div class="col"><div class="h4 mb-0 text-warning" id="att-late"><%= summary.attendance.late %></div><small class="text-muted">Late</small></div>
+        <div class="col"><div class="h4 mb-0 text-primary" id="att-checkedout"><%= summary.attendance.checkedOut %></div><small class="text-muted">Checked out</small></div>
+        <div class="col"><div class="h4 mb-0 text-secondary" id="att-absent"><%= summary.attendance.absent %></div><small class="text-muted">Absent</small></div>
+      </div>
+      <div class="progress" style="height: 10px;">
+        <div class="progress-bar bg-success" style="width: 0%" id="bar-present"></div>
+        <div class="progress-bar bg-warning" style="width: 0%" id="bar-late"></div>
+        <div class="progress-bar bg-primary" style="width: 0%" id="bar-checkedout"></div>
+        <div class="progress-bar bg-secondary" style="width: 0%" id="bar-absent"></div>
+      </div>
+      <div class="text-muted small mt-2">Share of all recorded attendance entries.</div>
+    </div></div>
+  </div>
+  <div class="col-12 col-lg-5">
+    <div class="card shadow-sm"><div class="card-header bg-white"><i class="bi bi-pie-chart me-2"></i>Distribution</div>
+      <div class="card-body d-flex justify-content-center">
+        <div style="position: relative; height: 220px; width: 100%;">
+          <canvas id="attendance-chart" aria-label="Attendance distribution chart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="col-12">
+    <div class="card shadow-sm"><div class="card-header bg-white"><i class="bi bi-clock me-2"></i>Recent check-ins</div>
+      <div class="list-group list-group-flush" id="recent-checkins">
+        <% if (!recent.length) { %>
+          <div class="list-group-item text-muted">No attendance recorded yet.</div>
+        <% } %>
+        <% for (const r of recent) { %>
+          <div class="list-group-item d-flex justify-content-between align-items-center">
+            <div>
+              <div class="fw-semibold"><%= r.first_name %> <%= r.last_name %></div>
+              <div class="small text-muted"><%= r.event_title %></div>
+            </div>
+            <div class="text-end">
+              <span class="badge badge-status-<%= r.status %>"><%= r.status.replace('_', ' ') %></span>
+              <div class="small text-muted"><%= r.checkin_at ? fmt.t(r.checkin_at, timezone) : '—' %></div>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/layout_end', { pageScripts: ['/vendor/chartjs/chart.umd.js', '/js/admin-dashboard.js'] }) %>

@@ -1,0 +1,25 @@
+<%- include('../partials/layout_start', { title: 'My Events' }) %>
+
+<h1 class="h4 mb-3"><i class="bi bi-calendar-event me-2"></i>My Events</h1>
+
+<div class="table-responsive">
+  <table class="table table-hover align-middle shadow-sm bg-white">
+    <thead><tr><th>Event</th><th>Venue</th><th>Start</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+      <% for (const e of events) { %>
+        <tr>
+          <td class="fw-semibold"><%= e.title %><div class="small text-muted"><%= e.category || '' %></div></td>
+          <td><%= e.venue_name %></td>
+          <td class="small"><%= fmt.dt(e.start_at, timezone) %></td>
+          <td><span class="badge text-bg-<%= e.status === 'published' ? 'success' : 'secondary' %>"><%= e.status %></span></td>
+          <td class="text-end">
+            <a class="btn btn-sm btn-outline-primary" href="/teacher/events/<%= e.id %>/attendance">Attendance</a>
+          </td>
+        </tr>
+      <% } %>
+      <% if (!events.length) { %><tr><td colspan="5" class="text-center text-muted py-4">No assigned events.</td></tr><% } %>
+    </tbody>
+  </table>
+</div>
+
+<%- include('../partials/layout_end') %>

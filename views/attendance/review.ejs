@@ -1,0 +1,58 @@
+<%- include('../partials/layout_start', { title: 'Review Queue' }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h5 mb-0"><i class="bi bi-hourglass-split me-2"></i>Review Queue</h1>
+  <a class="btn btn-sm btn-outline-secondary" href="/admin">Dashboard</a>
+</div>
+
+<p class="text-muted small">
+  Attendance submissions flagged by GPS verification wait here. Approving confirms the student was present;
+  rejecting marks the record rejected. Every decision requires a reason and is written to the audit trail.
+</p>
+
+<% if (!rows.length) { %>
+  <div class="alert alert-success"><i class="bi bi-check-circle me-1"></i>No records are waiting for review.</div>
+<% } else { %>
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-sm table-hover mb-0 align-middle">
+          <thead class="table-light">
+            <tr><th>Student</th><th>Event</th><th>Checked in</th><th>Distance</th><th>Flag</th><th class="text-end">Decision</th></tr>
+          </thead>
+          <tbody>
+            <% rows.forEach(function (r) { %>
+              <tr data-row="<%= r.id %>">
+                <td><%= r.first_name %> <%= r.last_name %> <span class="text-muted small">(<%= r.student_number %>)</span></td>
+                <td class="small"><%= r.event_title %></td>
+                <td class="small"><%= r.checkin_at ? fmt.dt(r.checkin_at, timezone) : '—' %></td>
+                <td class="small"><%= r.checkin_distance_meters != null ? r.checkin_distance_meters + ' m' : '—' %></td>
+                <td class="small text-muted"><%= r.verification_reason || 'flagged' %></td>
+                <td class="text-end text-nowrap">
+                  <button class="btn btn-sm btn-success review-btn" data-id="<%= r.id %>"
+                          data-name="<%= r.first_name %> <%= r.last_name %>" data-decision="approve">Approve</button>
+                  <button class="btn btn-sm btn-outline-danger review-btn" data-id="<%= r.id %>"
+                          data-name="<%= r.first_name %> <%= r.last_name %>" data-decision="reject">Reject</button>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <% if (totalPages > 1) { %>
+    <nav class="mt-3">
+      <ul class="pagination pagination-sm justify-content-center">
+        <% for (let p = 1; p <= totalPages; p++) { %>
+          <li class="page-item <%= p === page ? 'active' : '' %>">
+            <a class="page-link" href="?page=<%= p %>"><%= p %></a>
+          </li>
+        <% } %>
+      </ul>
+    </nav>
+  <% } %>
+<% } %>
+
+<%- include('../partials/layout_end', { pageScripts: ['/js/attendance-review.js'] }) %>

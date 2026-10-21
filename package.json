@@ -1,0 +1,54 @@
+{
+  "name": "school-attendance-system",
+  "version": "1.0.0",
+  "description": "QR code + GPS based school event attendance management system (Node.js, Express, MySQL, Bootstrap 5, PWA)",
+  "main": "src/server.js",
+  "private": true,
+  "license": "MIT",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "scripts": {
+    "dev": "nodemon src/server.js",
+    "start": "node src/server.js",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "db:init": "node database/migrate.js --init",
+    "db:migrate": "node database/migrate.js",
+    "db:seed": "node database/seed.js",
+    "db:reset": "node database/migrate.js --init && node database/seed.js",
+    "create-admin": "node scripts/create-admin.js",
+    "generate-vapid": "node scripts/generate-vapid-keys.js",
+    "generate-icons": "node scripts/generate-icons.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^3.0.2",
+    "bootstrap": "^5.3.3",
+    "bootstrap-icons": "^1.11.3",
+    "chart.js": "^4.4.9",
+    "dotenv": "^16.5.0",
+    "ejs": "^3.1.10",
+    "exceljs": "^4.4.0",
+    "express": "^4.21.2",
+    "express-mysql-session": "^3.0.3",
+    "express-rate-limit": "^7.5.0",
+    "express-session": "^1.18.1",
+    "express-validator": "^7.2.1",
+    "helmet": "^8.1.0",
+    "html5-qrcode": "^2.3.8",
+    "multer": "^2.0.1",
+    "mysql2": "^3.14.0",
+    "node-cron": "^3.0.3",
+    "nodemailer": "^6.10.1",
+    "pdfkit": "^0.17.1",
+    "qrcode": "^1.5.4",
+    "socket.io": "^4.8.1",
+    "web-push": "^3.6.7"
+  },
+  "devDependencies": {
+    "jimp": "^0.22.12",
+    "nodemon": "^3.1.10",
+    "supertest": "^7.1.1",
+    "vitest": "^3.1.4"
+  }
+}

@@ -1,0 +1,47 @@
+<%- include('partials/layout_start', { title: 'My Account' }) %>
+
+<div class="row justify-content-center">
+  <div class="col-12 col-md-8 col-lg-6">
+    <div class="card shadow-sm">
+      <div class="card-header bg-white"><h1 class="h5 mb-0"><i class="bi bi-person-gear me-2"></i>My Account</h1></div>
+      <div class="card-body">
+        <dl class="row mb-4">
+          <dt class="col-sm-4">Username</dt><dd class="col-sm-8"><%= details.username %></dd>
+          <dt class="col-sm-4">Role</dt><dd class="col-sm-8"><span class="badge text-bg-secondary"><%= details.role %></span></dd>
+          <dt class="col-sm-4">Email</dt><dd class="col-sm-8"><%= details.email || '—' %></dd>
+          <% if (currentUser.role === 'student') { %>
+            <dt class="col-sm-4">Student number</dt><dd class="col-sm-8"><%= details.student_number %></dd>
+            <dt class="col-sm-4">Name</dt>
+            <dd class="col-sm-8"><%= details.s_first_name %> <%= details.s_middle_name || '' %> <%= details.s_last_name %></dd>
+          <% } else if (currentUser.role === 'teacher') { %>
+            <dt class="col-sm-4">Employee no.</dt><dd class="col-sm-8"><%= details.t_first_name ? 'Registered teacher' : '—' %></dd>
+          <% } %>
+          <dt class="col-sm-4">Last login</dt><dd class="col-sm-8"><%= fmt.dt(details.last_login_at, timezone) %></dd>
+        </dl>
+
+        <h2 class="h6 fw-bold">Change password</h2>
+        <form method="post" action="/profile/password" class="row g-3">
+          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+          <div class="col-12">
+            <label for="currentPassword" class="form-label">Current password</label>
+            <input type="password" class="form-control" id="currentPassword" name="currentPassword" autocomplete="current-password" required>
+          </div>
+          <div class="col-12 col-md-6">
+            <label for="newPassword" class="form-label">New password</label>
+            <input type="password" class="form-control" id="newPassword" name="newPassword" autocomplete="new-password" minlength="10" required>
+            <div class="form-text">Min 10 characters with upper case, lower case, and a digit.</div>
+          </div>
+          <div class="col-12 col-md-6">
+            <label for="confirmPassword" class="form-label">Confirm new password</label>
+            <input type="password" class="form-control" id="confirmPassword" name="confirmPassword" autocomplete="new-password" minlength="10" required>
+          </div>
+          <div class="col-12">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-1"></i>Update password</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/layout_end') %>

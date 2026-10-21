@@ -1,0 +1,101 @@
+<%- include('../partials/layout_start', { title: 'School Structure' }) %>
+
+<h1 class="h4 mb-3"><i class="bi bi-diagram-3 me-2"></i>School Structure</h1>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-calendar3 me-2"></i>School Years</div>
+      <div class="card-body">
+        <form id="year-form" class="row g-2 mb-3">
+          <div class="col-7"><input class="form-control form-control-sm" name="name" placeholder="2027-2028" pattern="\d{4}-\d{4}" required></div>
+          <div class="col-5"><input type="date" class="form-control form-control-sm" name="startDate" required></div>
+          <div class="col-7"><input type="date" class="form-control form-control-sm" name="endDate" required></div>
+          <div class="col-5"><button class="btn btn-sm btn-primary w-100" type="submit">Add</button></div>
+        </form>
+        <table class="table table-sm align-middle">
+          <thead><tr><th>Name</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            <% for (const y of years) { %>
+              <tr>
+                <td><%= y.name %><div class="small text-muted"><%= y.start_date %> → <%= y.end_date %></div></td>
+                <td><span class="badge text-bg-<%= y.status === 'active' ? 'success' : y.status === 'upcoming' ? 'info' : 'secondary' %>"><%= y.status %></span></td>
+                <td class="text-end">
+                  <% if (y.status !== 'active') { %>
+                    <button class="btn btn-sm btn-outline-success" data-activate-year="<%= y.id %>" title="Set active"><i class="bi bi-check2-circle"></i></button>
+                  <% } %>
+                </td>
+              </tr>
+            <% } %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-3">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-layers me-2"></i>Grade Levels</div>
+      <div class="card-body">
+        <form id="grade-form" class="row g-2 mb-3">
+          <div class="col-8"><input class="form-control form-control-sm" name="name" placeholder="Grade 7" maxlength="50" required></div>
+          <div class="col-4"><button class="btn btn-sm btn-primary w-100" type="submit">Add</button></div>
+        </form>
+        <ul class="list-group list-group-flush">
+          <% for (const g of grades) { %>
+            <li class="list-group-item d-flex justify-content-between align-items-center">
+              <%= g.name %><span class="badge text-bg-light"><%= g.sort_order %></span>
+            </li>
+          <% } %>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-12 col-lg-5">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-white fw-semibold"><i class="bi bi-grid me-2"></i>Sections</div>
+      <div class="card-body">
+        <form id="section-form" class="row g-2 mb-3">
+          <div class="col-5">
+            <select class="form-select form-select-sm" name="gradeLevelId" required>
+              <option value="">Grade…</option>
+              <% for (const g of grades) { %><option value="<%= g.id %>"><%= g.name %></option><% } %>
+            </select>
+          </div>
+          <div class="col-4">
+            <select class="form-select form-select-sm" name="schoolYearId" required>
+              <% for (const y of years) { %>
+                <option value="<%= y.id %>" <%= y.status === 'active' ? 'selected' : '' %>><%= y.name %></option>
+              <% } %>
+            </select>
+          </div>
+          <div class="col-3"><input class="form-control form-control-sm" name="name" placeholder="Section" maxlength="50" required></div>
+          <div class="col-12"><button class="btn btn-sm btn-primary w-100" type="submit">Add section</button></div>
+        </form>
+        <div class="table-scroll" style="max-height: 340px;">
+          <table class="table table-sm align-middle">
+            <thead><tr><th>Grade</th><th>Section</th><th>School year</th><th></th></tr></thead>
+            <tbody>
+              <% for (const s of sections) { %>
+                <tr>
+                  <td><%= s.grade_level_name %></td>
+                  <td><%= s.name %></td>
+                  <td class="small"><%= s.school_year_name %></td>
+                  <td class="text-end">
+                    <button class="btn btn-sm <%= s.status === 'active' ? 'btn-outline-secondary' : 'btn-outline-success' %>"
+                            data-toggle-section="<%= s.id %>" data-next="<%= s.status === 'active' ? 'archived' : 'active' %>">
+                      <%= s.status === 'active' ? 'Archive' : 'Restore' %>
+                    </button>
+                  </td>
+                </tr>
+              <% } %>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/layout_end', { pageScripts: ['/js/structure-page.js'] }) %>

@@ -1,0 +1,84 @@
+<%- include('../partials/layout_start', { title: 'Users & Teachers' }) %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h4 mb-0"><i class="bi bi-person-badge me-2"></i>Users &amp; Teachers <span class="text-muted small">(<%= total %>)</span></h1>
+  <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#user-modal"><i class="bi bi-person-plus me-1"></i>Add User</button>
+</div>
+
+<div class="card shadow-sm">
+  <div class="table-responsive table-scroll">
+    <table class="table table-hover align-middle mb-0 table-sticky">
+      <thead><tr><th>Username</th><th>Name</th><th>Role</th><th>Student no.</th><th>Status</th><th>Last login</th><th></th></tr></thead>
+      <tbody>
+        <% for (const u of users) { %>
+          <tr data-user-id="<%= u.id %>">
+            <td><%= u.username %><div class="small text-muted"><%= u.email || '' %></div></td>
+            <td><%= u.full_name && u.full_name.trim() ? u.full_name : '—' %></td>
+            <td><span class="badge text-bg-<%= u.role === 'admin' ? 'danger' : u.role === 'teacher' ? 'info' : 'secondary' %>"><%= u.role %></span></td>
+            <td><%= u.student_number || '—' %></td>
+            <td><span class="badge text-bg-<%= u.status === 'active' ? 'success' : 'secondary' %>"><%= u.status %></span></td>
+            <td class="small"><%= u.last_login_at ? fmt.dt(u.last_login_at, timezone) : 'never' %></td>
+            <td class="text-end text-nowrap">
+              <button class="btn btn-sm btn-outline-secondary" data-action="toggle-status" data-status="<%= u.status %>" title="Activate / deactivate"><i class="bi bi-power"></i></button>
+              <button class="btn btn-sm btn-outline-warning" data-action="reset-password" title="Reset password"><i class="bi bi-key"></i></button>
+            </td>
+          </tr>
+        <% } %>
+        <% if (!users.length) { %><tr><td colspan="7" class="text-center text-muted py-4">No users found.</td></tr><% } %>
+      </tbody>
+    </table>
+  </div>
+  <div class="card-footer bg-white small text-muted">Page <%= page %> of <%= totalPages %></div>
+</div>
+
+<!-- Add user modal -->
+<div class="modal fade" id="user-modal" tabindex="-1" aria-labelledby="userModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <form id="user-form">
+        <div class="modal-header"><h5 class="modal-title" id="userModalLabel">Add user</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body row g-3">
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="u-role">Role *</label>
+            <select class="form-select" id="u-role" name="role" required>
+              <option value="teacher">Teacher</option>
+              <option value="admin">Administrator</option>
+            </select>
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="u-username">Username *</label>
+            <input class="form-control" id="u-username" name="username" required pattern="[A-Za-z0-9._-]{3,50}">
+          </div>
+          <div class="col-12 col-md-4">
+            <label class="form-label" for="u-email">Email</label>
+            <input type="email" class="form-control" id="u-email" name="email">
+          </div>
+          <div class="col-12 col-md-6 teacher-field">
+            <label class="form-label" for="u-first">First name *</label>
+            <input class="form-control" id="u-first" name="firstName" maxlength="80">
+          </div>
+          <div class="col-12 col-md-6 teacher-field">
+            <label class="form-label" for="u-last">Last name *</label>
+            <input class="form-control" id="u-last" name="lastName" maxlength="80">
+          </div>
+          <div class="col-12 col-md-6 teacher-field">
+            <label class="form-label" for="u-employee">Employee number *</label>
+            <input class="form-control" id="u-employee" name="employeeNumber" pattern="[A-Za-z0-9-]{3,30}">
+          </div>
+          <div class="col-12 col-md-6">
+            <label class="form-label" for="u-password">Initial password *</label>
+            <input type="password" class="form-control" id="u-password" name="password" required minlength="10" autocomplete="new-password">
+            <div class="form-text">10+ chars, upper &amp; lower case, digit. Share securely.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Create user</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<%- include('../partials/layout_end', { pageScripts: ['/js/users-page.js'] }) %>

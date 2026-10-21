@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title><%= typeof title !== 'undefined' && title ? title + ' · ' : '' %><%= schoolName %></title>
+  <meta name="theme-color" content="#1a3a5c">
+  <link rel="manifest" href="/manifest.webmanifest">
+  <link rel="icon" href="/icons/icon-192.png" type="image/png">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="stylesheet" href="/vendor/bootstrap/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/vendor/bootstrap-icons/font/bootstrap-icons.min.css">
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body data-csrf="<%= csrfToken %>"
+      data-user-id="<%= currentUser ? currentUser.id : '' %>"
+      data-user-role="<%= currentUser ? currentUser.role : '' %>"
+      data-school-tz="<%= timezone %>"
+      data-school-name="<%= schoolName %>">
+<%- include('navbar') %>
+<div class="container-fluid px-2 px-md-4 py-3">
+  <%- include('flash_messages') %>
+  <div id="offline-banner" class="alert alert-warning d-none align-items-center gap-2 mb-3" role="alert">
+    <i class="bi bi-wifi-off"></i>
+    <div>You are offline. Attendance check-in requires a connection to the server &mdash; your submission will NOT be accepted until you are back online.</div>
+  </div>

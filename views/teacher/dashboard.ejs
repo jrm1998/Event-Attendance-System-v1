@@ -1,0 +1,40 @@
+<%- include('../partials/layout_start', { title: 'Teacher Dashboard' }) %>
+
+<h1 class="h4 mb-3"><i class="bi bi-speedometer2 me-2"></i>My assigned events</h1>
+
+<% const nowMs = Date.now(); %>
+<div class="row g-3">
+  <% if (!events.length) { %>
+    <div class="col-12"><div class="card shadow-sm"><div class="card-body text-center text-muted py-5">
+      You have no assigned events yet. The school administrator assigns coordinators to events.
+    </div></div></div>
+  <% } %>
+  <% for (const e of events) { %>
+    <% const startMs = new Date(e.start_at).getTime(); const endMs = new Date(e.end_at).getTime(); %>
+    <div class="col-12 col-md-6 col-xl-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <span class="badge text-bg-<%= e.status === 'published' ? 'success' : 'secondary' %>"><%= e.status %></span>
+            <% if (e.status === 'published') { %>
+              <% if (nowMs >= startMs && nowMs <= endMs) { %>
+                <span class="badge text-bg-danger">LIVE NOW</span>
+              <% } else if (nowMs < startMs) { %>
+                <span class="badge text-bg-info">Upcoming</span>
+              <% } %>
+            <% } %>
+          </div>
+          <h2 class="h6 fw-bold mb-1"><%= e.title %></h2>
+          <p class="small text-muted mb-1"><i class="bi bi-geo-alt me-1"></i><%= e.venue_name %></p>
+          <p class="small mb-0"><i class="bi bi-clock me-1"></i><%= fmt.dt(e.start_at, timezone) %></p>
+        </div>
+        <div class="card-footer bg-white d-flex gap-1">
+          <a class="btn btn-sm btn-outline-primary" href="/teacher/events/<%= e.id %>/attendance"><i class="bi bi-people me-1"></i>Attendance</a>
+          <a class="btn btn-sm btn-outline-primary" href="/teacher/events/<%= e.id %>/qr"><i class="bi bi-qr-code me-1"></i>QR Screen</a>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<%- include('../partials/layout_end') %>

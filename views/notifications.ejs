@@ -1,0 +1,75 @@
+<%- include('partials/layout_start', { title: 'Notifications' }) %>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h5 mb-0"><i class="bi bi-bell me-2"></i>Notifications</h1>
+  <button class="btn btn-sm btn-outline-secondary" id="mark-all-btn">Mark all read</button>
+</div>
+
+<div class="row g-3">
+  <div class="col-12 col-lg-8">
+    <div class="card shadow-sm">
+      <div class="list-group list-group-flush" id="notification-list">
+        <% if (!initial.length) { %>
+          <div class="list-group-item text-muted">No notifications yet.</div>
+        <% } %>
+        <% for (const n of initial) { %>
+          <div class="list-group-item <%= n.read_at ? '' : 'fw-semibold bg-light' %>" data-id="<%= n.id %>">
+            <div class="d-flex justify-content-between gap-2">
+              <div>
+                <div><i class="bi <%= n.type === 'reminder' ? 'bi-alarm' : n.type === 'attendance' ? 'bi-check2-circle' : n.type === 'announcement' ? 'bi-megaphone' : 'bi-info-circle' %> me-1"></i><%= n.title %></div>
+                <div class="small text-muted fw-normal"><%= n.message %></div>
+                <% if (n.event_title) { %><div class="small text-muted fw-normal">Event: <%= n.event_title %></div><% } %>
+              </div>
+              <div class="text-end text-nowrap">
+                <div class="small text-muted"><%= fmt.dt(n.created_at, timezone) %></div>
+                <% if (!n.read_at) { %><button class="btn btn-sm btn-link p-0 mark-read-btn" data-id="<%= n.id %>">Mark read</button><% } %>
+              </div>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    </div>
+    <% if (total > initial.length) { %>
+      <div class="text-center mt-3">
+        <button class="btn btn-sm btn-outline-primary" id="load-more-btn"
+                data-page="1" data-total="<%= total %>" data-shown="<%= initial.length %>">Load more</button>
+      </div>
+    <% } %>
+  </div>
+
+  <div class="col-12 col-lg-4">
+    <div class="card shadow-sm mb-3">
+      <div class="card-header"><i class="bi bi-sliders me-1"></i>Preferences</div>
+      <div class="card-body">
+        <div class="form-check form-switch mb-2">
+          <input class="form-check-input" type="checkbox" id="pref-inapp" <%= preferences.inApp ? 'checked' : '' %>>
+          <label class="form-check-label" for="pref-inapp">In-app notifications</label>
+        </div>
+        <div class="form-check form-switch mb-2">
+          <input class="form-check-input" type="checkbox" id="pref-email" <%= preferences.email ? 'checked' : '' %>>
+          <label class="form-check-label" for="pref-email">Email notifications</label>
+        </div>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" id="pref-push" <%= preferences.push ? 'checked' : '' %>>
+          <label class="form-check-label" for="pref-push">Push notifications</label>
+        </div>
+        <div class="form-text">Email also requires an address on your account and the school server having email delivery configured.</div>
+      </div>
+    </div>
+
+    <div class="card shadow-sm" id="push-card">
+      <div class="card-header"><i class="bi bi-phone me-1"></i>Device push</div>
+      <div class="card-body">
+        <% if (!pushAvailable) { %>
+          <div class="small text-muted">Push is not configured on this server. Ask the administrator to set VAPID keys (<code>npm run generate-vapid</code>).</div>
+        <% } else { %>
+          <p class="small text-muted mb-2">Enable browser push so reminders reach you even when the app is closed. The browser will ask for permission.</p>
+          <button class="btn btn-sm btn-primary" id="enable-push-btn"><i class="bi bi-bell-plus me-1"></i>Enable push on this device</button>
+          <div class="small text-success mt-2 d-none" id="push-status"></div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('partials/layout_end', { pageScripts: ['/vendor/socket.io/socket.io.min.js', '/js/socket-client.js', '/js/notifications-page.js'] }) %>

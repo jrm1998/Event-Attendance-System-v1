@@ -1,0 +1,82 @@
+<%- include('../partials/layout_start', { title: 'My Events' }) %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h4 mb-0"><i class="bi bi-calendar2-check me-2"></i>My Events</h1>
+  <div class="d-flex gap-2">
+    <a class="btn btn-outline-primary btn-sm" href="/student/history">My Attendance</a>
+    <button type="button" class="btn btn-primary btn-sm pwa-install-btn d-none"><i class="bi bi-download me-1"></i>Install App</button>
+  </div>
+</div>
+
+<div id="ios-install-hint" class="alert alert-light border small d-none">
+  <strong>Install on iPhone/iPad:</strong> tap <i class="bi bi-box-arrow-up"></i> Share in Safari, then
+  <strong>Add to Home Screen</strong>.
+</div>
+
+<div class="row g-3">
+  <% if (!events.length) { %>
+    <div class="col-12"><div class="card shadow-sm"><div class="card-body text-center text-muted py-5">
+      No upcoming events for you yet. Check back later.
+    </div></div></div>
+  <% } %>
+  <% for (const e of events) {
+       const startMs = new Date(e.start_at).getTime();
+       const endMs = new Date(e.end_at).getTime();
+       const opensMs = new Date(e.checkin_opens_at).getTime();
+       const closesMs = new Date(e.checkin_closes_at).getTime();
+       const nowMs = now.getTime();
+       const windowOpen = nowMs >= opensMs && nowMs <= closesMs;
+  %>
+    <div class="col-12 col-md-6 col-xl-4">
+      <div class="card shadow-sm h-100">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-start mb-2">
+            <% if (e.attendance_status) { %>
+              <span class="badge badge-status-<%= e.attendance_status %>"><%= e.attendance_status.replace('_',' ') %></span>
+            <% } else if (nowMs > closesMs) { %>
+              <span class="badge text-bg-secondary">Check-in closed</span>
+            <% } else if (windowOpen) { %>
+              <span class="badge text-bg-success">Check-in OPEN</span>
+            <% } else if (nowMs < opensMs) { %>
+              <span class="badge text-bg-info">Opens <%= fmt.t(e.checkin_opens_at, timezone) %></span>
+            <% } %>
+            <span class="badge text-bg-light"><%= e.category || 'Event' %></span>
+          </div>
+          <h2 class="h6 fw-bold mb-1"><%= e.title %></h2>
+          <p class="small text-muted mb-1"><i class="bi bi-geo-alt me-1"></i><%= e.venue_name %>
+            <span class="ms-2"><i class="bi bi-rulers me-1"></i><%= e.radius_meters %> m</span></p>
+          <p class="small mb-0"><i class="bi bi-clock me-1"></i><%= fmt.dt(e.start_at, timezone) %></p>
+          <% if (e.checkout_required) { %><p class="small text-warning mb-0"><i class="bi bi-box-arrow-right me-1"></i>Check-out required</p><% } %>
+        </div>
+        <div class="card-footer bg-white d-flex gap-2">
+          <a class="btn btn-sm btn-outline-secondary" href="/student/events/<%= e.id %>">Details</a>
+          <% if (e.attendance_status === 'checked_out') { %>
+            <span class="btn btn-sm btn-light disabled">Done</span>
+          <% } else if (e.attendance_status && e.checkout_required && e.attendance_status !== 'checked_out' && nowMs <= endMs) { %>
+            <a class="btn btn-sm btn-warning" href="/student/events/<%= e.id %>/scan">Check out</a>
+          <% } else if (!e.attendance_status && windowOpen) { %>
+            <a class="btn btn-sm btn-primary" href="/student/events/<%= e.id %>/scan"><i class="bi bi-qr-code-scan me-1"></i>Scan to check in</a>
+          <% } %>
+        </div>
+      </div>
+    </div>
+  <% } %>
+</div>
+
+<div class="card shadow-sm mt-4">
+  <div class="card-header bg-white fw-semibold">Recent attendance</div>
+  <div class="list-group list-group-flush">
+    <% if (!history.length) { %><div class="list-group-item text-muted">Nothing yet — your check-ins will appear here.</div><% } %>
+    <% for (const h of history) { %>
+      <div class="list-group-item d-flex justify-content-between align-items-center">
+        <div>
+          <div class="fw-semibold"><%= h.event_title %></div>
+          <div class="small text-muted"><%= h.checkin_at ? fmt.dt(h.checkin_at, timezone) : '' %></div>
+        </div>
+        <span class="badge badge-status-<%= h.status %>"><%= h.status.replace('_',' ') %></span>
+      </div>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../partials/layout_end') %>

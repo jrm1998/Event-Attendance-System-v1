@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Environment & secrets
+.env
+.env.local
+.env.production
+*.pem
+*.key
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime data
+public/uploads/
+data/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test coverage
+coverage/
